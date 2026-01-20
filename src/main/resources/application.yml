@@ -1,0 +1,13 @@
+micronaut:
+  application:
+    name: app
+
+endpoints:
+  prometheus:
+    enabled: true
+    sensitive: false
+
+logger:
+  levels:
+    io.micronaut.context: DEBUG
+
