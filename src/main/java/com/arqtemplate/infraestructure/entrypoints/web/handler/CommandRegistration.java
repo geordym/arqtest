@@ -1,21 +1,14 @@
 package com.arqtemplate.infraestructure.entrypoints.web.handler;
 
-import com.arqtemplate.infraestructure.entrypoints.web.dto.CommandContext;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
 
-import java.util.function.BiConsumer;
-
-public final class CommandRegistration<C, R> {
-    final Class<C> payloadType;
-    final Class<R> responseType;
-    final CommandHandler<C, R> handler;
+public final class CommandRegistration<C> {
+    final CommandHandler<C> handler;
 
     public CommandRegistration(
-            Class<C> payloadType,
-            Class<R> responseType,
-            CommandHandler<C, R> handler
+            CommandHandler<C> handler
     ) {
-        this.payloadType = payloadType;
-        this.responseType = responseType;
         this.handler = handler;
     }
 }

@@ -1,7 +1,5 @@
 package com.arqtemplate.infraestructure.entrypoints.web.handler;
 
-import com.arqtemplate.infraestructure.entrypoints.web.dto.HelloCommandPayload;
-import com.arqtemplate.infraestructure.entrypoints.web.dto.HelloResult;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.serde.ObjectMapper;
 import jakarta.inject.Inject;
@@ -20,9 +18,7 @@ public class CommandBusFactory {
         return CommandBus.builder(objectMapper)
                 .addCommandListener(
                         "users.create",
-                        HelloCommandPayload.class,
-                        HelloResult.class,
-                        (cmd, ctx) -> handler.procesar(cmd, ctx)
+                        handler::procesar
                 )
                 .build();
     }

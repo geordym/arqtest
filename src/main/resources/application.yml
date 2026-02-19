@@ -6,6 +6,13 @@ endpoints:
   prometheus:
     enabled: true
     sensitive: false
+  health:
+    enabled: true
+    sensitive: false
+
+  info:
+    enabled: true
+    sensitive: false
 
 logger:
   levels:

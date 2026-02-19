@@ -4,9 +4,12 @@ import com.arqtemplate.infraestructure.entrypoints.web.dto.CommandRequestDto;
 import com.arqtemplate.infraestructure.entrypoints.web.dto.CommandResponse;
 import com.arqtemplate.infraestructure.entrypoints.web.handler.CommandBus;
 import com.arqtemplate.infraestructure.entrypoints.web.handler.HelloCommandHandler;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.json.tree.JsonNode;
 import io.micronaut.serde.ObjectMapper;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -30,11 +33,10 @@ public class CommandController {
     private CommandBus commandBus;
 
     @Post
-    public CommandResponse<?> receiveCommand(
-            @Body CommandRequestDto command
+    public HttpResponse<?> receiveCommand(
+            HttpRequest<JsonNode> request
     ) {
-        return commandBus.dispatch(command);
+        return commandBus.dispatch(request);
     }
-
 
 }

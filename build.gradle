@@ -12,6 +12,9 @@ repositories {
 }
 
 dependencies {
+    //Observabilidad
+    implementation("io.micronaut:micronaut-management")
+
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
 

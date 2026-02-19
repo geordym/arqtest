@@ -1,6 +1,9 @@
 package com.arqtemplate.infraestructure.entrypoints.web.handler;
 
 import com.arqtemplate.infraestructure.entrypoints.web.dto.*;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.json.tree.JsonNode;
 import io.micronaut.serde.ObjectMapper;
 
 import java.util.HashMap;
@@ -8,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 public class CommandBus {
-    private final Map<String, CommandRegistration<?, ?>> registry;
+    private final Map<String, CommandRegistration<?>> registry;
     private final ObjectMapper objectMapper;
 
     private CommandBus(
-            Map<String, CommandRegistration<?, ?>> registry,
+            Map<String, CommandRegistration<?>> registry,
             ObjectMapper objectMapper
     ) {
         this.registry = registry;
@@ -23,45 +26,36 @@ public class CommandBus {
         return new Builder(objectMapper);
     }
 
-    public CommandResponse<?> dispatch(CommandRequestDto request) {
-        CommandRegistration<?, ?> reg = registry.get(request.getName());
 
-        if (reg == null) {
-            return CommandResponse.failure(
-                    request.getName(),
-                    List.of(new CommandError(
-                            "COMMAND_NOT_FOUND",
-                            "Command not registered"
-                    )),
-                    null
-            );
+    public HttpResponse<?> dispatch(HttpRequest<JsonNode> request) {
+        JsonNode body = request.getBody().orElse(null);
+        if (body == null) {
+            return HttpResponse.badRequest("Body vacío");
         }
 
-        CommandMeta commandMeta = null;
+        String name = body.get("name").getStringValue();
+        if (name == null) {
+            return HttpResponse.badRequest();
+        }
+
+        CommandRegistration<?> reg = registry.get(name);
+        if (reg == null) {
+            return HttpResponse.notFound();
+        }
+
         try {
-            Object payload = objectMapper.readValue(
-                    objectMapper.writeValueAsBytes(request.getPayload()),
-                    reg.payloadType);
-
-
-            return invoke(reg, payload, null);
-
+            return invoke(reg, request);
         } catch (Exception e) {
-            return CommandResponse.failure(
-                    request.getName(),
-                    List.of(CommandError.fromException(e)),
-                    commandMeta
-            );
+           return HttpResponse.serverError();
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <C, R> CommandResponse<R> invoke(
-            CommandRegistration<C, R> reg,
-            Object payload,
-            CommandContext ctx
+    private <C, R> HttpResponse<?> invoke(
+            CommandRegistration<C> reg,
+            HttpRequest<?> request
     ) {
-        return reg.handler.handle((C) payload, ctx);
+        return reg.handler.handle((C) request);
     }
 
 
@@ -69,7 +63,7 @@ public class CommandBus {
 
     public static class Builder {
 
-        private final Map<String, CommandRegistration<?, ?>> registry= new HashMap<>();
+        private final Map<String, CommandRegistration<?>> registry= new HashMap<>();
         private final ObjectMapper objectMapper;
 
         private Builder(ObjectMapper objectMapper) {
@@ -78,9 +72,7 @@ public class CommandBus {
 
         public <C, R> Builder addCommandListener(
                 String commandName,
-                Class<C> payloadType,
-                Class<R> responseType,
-                CommandHandler<C, R> handler
+                CommandHandler<C> handler
         ) {
             if (registry.containsKey(commandName)) {
                 throw new IllegalStateException(
@@ -90,7 +82,7 @@ public class CommandBus {
 
             registry.put(
                     commandName,
-                    new CommandRegistration<>(payloadType, responseType, handler)
+                    new CommandRegistration<>(handler)
             );
             return this;
         }
